@@ -3,56 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HTML Table Generator & Editor</title>
+  <title>HTML Cleaner & Visual Editor</title>
   <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
   <style>
-    /* Existing styles */
     body { margin: 0; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; }
     header { background-color: #333; color: white; padding: 1rem; text-align: center; }
-    main { display: flex; flex: 1; overflow: hidden; }
-    #editor, .CodeMirror { height: 100%; }
-    #left, #right { width: 50%; height: 100%; box-sizing: border-box; padding: 10px; overflow: auto; }
+    main { display: flex; flex: 1; }
+    #editor, #codeEditor { height: 100%; }
+    #left, #right { width: 50%; height: 100%; box-sizing: border-box; padding: 10px; }
     #left { border-right: 1px solid #ccc; }
     #toolbar { margin-bottom: 10px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-
-    /* New table dialog styles */
-    .table-dialog {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: white;
-      padding: 20px;
-      border-radius: 5px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
-      z-index: 1000;
-    }
-
-    .table-dialog label {
-      display: block;
-      margin: 10px 0;
-    }
-
-    .table-dialog input {
-      width: 100%;
-      padding: 5px;
-      margin-top: 5px;
-    }
-
-    .dialog-buttons {
-      margin-top: 15px;
-      text-align: right;
-    }
-
-    .dialog-buttons button {
-      margin-left: 10px;
-      padding: 5px 15px;
-      cursor: pointer;
-    }
+    .CodeMirror { height: 100%; }
   </style>
 </head>
 <body>
@@ -60,29 +22,9 @@
     <div id="left">
       <div id="toolbar"></div>
       <div id="editor"></div>
-      <button onclick="showTableDialog()">Create Table</button>
-      <button onclick="formatListsAndTables()">Format Content</button>
     </div>
     <div id="right">
       <textarea id="codeEditor"></textarea>
-    </div>
-
-    <!-- Table creation dialog -->
-    <div id="tableDialog" class="table-dialog">
-      <h3>Create Table</h3>
-      <label>
-        Rows: <input type="number" id="tableRows" min="1" value="2">
-      </label>
-      <label>
-        Columns: <input type="number" id="tableCols" min="1" value="2">
-      </label>
-      <label>
-        <input type="checkbox" id="tableHeader"> Include Header
-      </label>
-      <div class="dialog-buttons">
-        <button onclick="createTable()">Insert</button>
-        <button onclick="hideTableDialog()">Cancel</button>
-      </div>
     </div>
   </main>
 
@@ -118,7 +60,6 @@
       theme: "default"
     });
 
-    // Editor synchronization functions
     function updateCodeMirror() {
       const html = quill.root.innerHTML;
       codeMirror.setValue(html);
@@ -131,79 +72,9 @@
 
     quill.on('text-change', updateCodeMirror);
     codeMirror.on('change', updateQuill);
+
+    // Initialize with default sync
     updateCodeMirror();
-
-    // Table creation functions
-    function showTableDialog() {
-      document.getElementById('tableDialog').style.display = 'block';
-    }
-
-    function hideTableDialog() {
-      document.getElementById('tableDialog').style.display = 'none';
-    }
-
-    function createTable() {
-      const rows = parseInt(document.getElementById('tableRows').value);
-      const cols = parseInt(document.getElementById('tableCols').value);
-      const hasHeader = document.getElementById('tableHeader').checked;
-
-      let tableHTML = '<table>';
-      
-      if (hasHeader) {
-        tableHTML += '<thead><tr>';
-        for (let i = 0; i < cols; i++) {
-          tableHTML += `<th>Header ${i+1}</th>`;
-        }
-        tableHTML += '</tr></thead>';
-      }
-
-      tableHTML += '<tbody>';
-      for (let i = 0; i < rows; i++) {
-        tableHTML += '<tr>';
-        for (let j = 0; j < cols; j++) {
-          tableHTML += `<td>Data ${i+1}-${j+1}</td>`;
-        }
-        tableHTML += '</tr>';
-      }
-      tableHTML += '</tbody></table>';
-
-      const range = quill.getSelection();
-      if (range) {
-        quill.clipboard.dangerouslyPasteHTML(range.index, tableHTML);
-      } else {
-        quill.clipboard.dangerouslyPasteHTML(0, tableHTML);
-      }
-      hideTableDialog();
-    }
-
-    // Enhanced formatting function
-    function formatListsAndTables() {
-      let html = quill.root.innerHTML;
-      
-      // Format lists
-      html = html
-        .replace(/<ul[^>]*>/g, '<ul style="margin: 10px 0; padding-left: 20px; list-style-type: disc;">')
-        .replace(/<ol[^>]*>/g, '<ol style="margin: 10px 0; padding-left: 20px; list-style-type: decimal;">');
-
-      // Format tables with better selectors
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = html;
-      
-      tempDiv.querySelectorAll('table').forEach(table => {
-        table.style.borderCollapse = 'collapse';
-        table.style.width = '100%';
-        table.style.margin = '10px 0';
-      });
-
-      tempDiv.querySelectorAll('th, td').forEach(cell => {
-        cell.style.border = '1px solid #ccc';
-        cell.style.padding = '8px';
-        cell.style.textAlign = 'left';
-      });
-
-      quill.root.innerHTML = tempDiv.innerHTML;
-      updateCodeMirror();
-    }
   </script>
 </body>
 </html>
